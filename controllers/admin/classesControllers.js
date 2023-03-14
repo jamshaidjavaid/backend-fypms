@@ -11,7 +11,7 @@ const { validationResult } = require("express-validator");
 const HttpError = require("../../models/HttpError");
 const Class = require("../../models/classModel");
 const Student = require("../../models/studentModel");
-const Teacher = require("../../models/teacherModel").default;
+const Teacher = require("../../models/teacherModel");
 const Project = require("../../models/projectModel");
 const NoticeBoard = require("../../models/noticeBoardModel");
 
@@ -20,18 +20,19 @@ const NoticeBoard = require("../../models/noticeBoardModel");
 const getClasses = async (req, res, next) => {
   let classes;
   try {
-    classes = await Class.find({});
-  } catch (err) {
-    console.error(err);
+    classes = await Class.find(
+      {},
+      "name totalStudents totalProjects assignedSupervisors"
+    );
 
     if (classes.length === 0) {
       return next(new HttpError("No class exist", 404));
     }
-
+    res.json({ classes: classes.map((n) => n.toObject({ getters: true })) });
+  } catch (err) {
+    console.error(err);
     return next(new HttpError("Sorry, couldn't load your classes", 500));
   }
-
-  res.json({ classes: classes.map((n) => n.toObject({ getters: true })) });
 };
 
 // create a new class
@@ -152,7 +153,7 @@ const deleteClass = async (req, res, next) => {
       new HttpError("Something went wrong, couldn't delete the class", 422)
     );
   }
-  res.json({ myClass, message: "Deleted Successfully" });
+  res.json({ message: "Deleted Successfully" });
 };
 
 // IMPORTANT
@@ -161,7 +162,10 @@ const deleteClass = async (req, res, next) => {
 const getClassById = async (req, res, next) => {
   const { classId } = req.params;
 
-  const myClass = await Class.findById(classId);
+  const myClass = await Class.findById(
+    classId,
+    "name minAllowed maxAllowed timetable"
+  );
 
   if (!myClass) {
     return next(new HttpError("Your chosen class doesn't exist", 404));
@@ -170,34 +174,47 @@ const getClassById = async (req, res, next) => {
   let projects, supervisors, examiners, students, notices, timetable;
 
   try {
-    projects = await Project.find({ classId: classId });
-    supervisors = await Teacher.find({
-      assignedClassesForSupervision: { $in: classId },
-    });
-    examiners = await Teacher.find({
-      assignedClassesForExamination: { $in: classId },
-    });
-    students = await Student.find({ classId: classId });
+    projects = await Project.find(
+      { classId: classId },
+      "title supervisorName supervisorId members status"
+    );
+    supervisors = await Teacher.find(
+      {
+        assignedClassesForSupervision: { $in: classId },
+      },
+      "name empId assignedProjectsCount projectsLimit"
+    );
+    examiners = await Teacher.find(
+      {
+        assignedClassesForExamination: { $in: classId },
+      },
+      "name empId designation"
+    );
+    students = await Student.find(
+      { classId: classId },
+      "name rollNo marks status hasTopped"
+    );
     notices = await NoticeBoard.find({
       receiverEntity: "class",
       receiverId: classId,
     });
-    timetable = myClass.timetable;
+
+    res.json({
+      myClass: myClass.toObject({ getters: true }),
+      projects: projects.map((p) => p.myClass.toObject({ getters: true })),
+      supervisors: supervisors.map((s) =>
+        s.myClass.toObject({ getters: true })
+      ),
+      examiners: examiners.map((e) => e.myClass.toObject({ getters: true })),
+      students: students.map((s) => s.myClass.toObject({ getters: true })),
+      notices: notices.map((n) => n.myClass.toObject({ getters: true })),
+    });
   } catch (err) {
     console.error(err);
     return next(
       new HttpError("Something went wrong, couldn't load class", 500)
     );
   }
-  res.json({
-    myClass,
-    projects,
-    supervisors,
-    examiners,
-    students,
-    notices,
-    timetable,
-  });
 };
 
 const editTimeTable = async (req, res, next) => {

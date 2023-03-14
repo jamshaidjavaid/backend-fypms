@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
 
 const HttpError = require("../../models/HttpError");
-const Teacher = require("../../models/teacherModel").default;
+const Teacher = require("../../models/teacherModel");
 const Class = require("../../models/classModel");
 const Student = require("../../models/studentModel");
 const Project = require("../../models/projectModel");
