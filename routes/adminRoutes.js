@@ -1,6 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 
+const { getDashboard } = require("../controllers/admin/dashboardController");
 // CLASSES
 const {
   getClasses,
@@ -45,10 +46,7 @@ const {
 
 const router = express.Router();
 
-router.get("/", (req, res, next) => {
-  console.log("Get request in Dashboard");
-  res.json({ message: "It works!" });
-});
+router.get("/", getDashboard);
 
 // Notice Board Routes
 router.get("/notice-board", getNoticeBoard);
