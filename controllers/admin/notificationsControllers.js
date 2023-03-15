@@ -9,11 +9,6 @@ const getNotifications = async (req, res, next) => {
   let notifications;
   try {
     notifications = await Notification.find().sort({ createdAt: -1 }).limit(25);
-    if (!notices) {
-      return next(
-        new HttpError("Don't have anything to show at notifications.", 404)
-      );
-    }
     res.json({
       notifications: notifications.map((n) => n.toObject({ getters: true })),
     });

@@ -77,6 +77,13 @@ const teacherSchema = new mongoose.Schema({
     ],
     default: [],
   },
+  notes: {
+    type: [
+      {
+        note: String,
+      },
+    ],
+  },
 });
 
 module.exports = mongoose.model("Teacher", teacherSchema);

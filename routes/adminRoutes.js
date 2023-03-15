@@ -44,6 +44,14 @@ const {
   deleteProject,
 } = require("../controllers/admin/projectsControllers");
 
+// PERSONAL NOTES
+const {
+  getNotes,
+  createNote,
+  deleteNote,
+} = require("../controllers/admin/notesControllers");
+
+// ///////////////////////////////////////////////////////////////////////////////////
 const router = express.Router();
 
 router.get("/", getDashboard);
@@ -148,5 +156,10 @@ router.patch(
   [body("classId").notEmpty().withMessage("choose class Id")],
   unAssignExaminerToClass
 );
+
+// NOTES ROUTES
+router.get("/personal-notes", getNotes);
+router.post("/personal-notes/new-note", createNote);
+router.delete("/personal-notes/:noteId/delete", deleteNote);
 
 module.exports = router;

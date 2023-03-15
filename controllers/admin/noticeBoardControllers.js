@@ -9,13 +9,7 @@ const NoticeBoard = require("../../models/noticeBoardModel");
 const getNoticeBoard = async (req, res, next) => {
   let notices;
   try {
-    notices = await NoticeBoard.find({}).sort({ createdAt: -1 }).limit(15);
-
-    if (notices.length === 0) {
-      return next(
-        new HttpError("Don't have anything to show at noticeboard.", 404)
-      );
-    }
+    notices = await NoticeBoard.find().sort({ createdAt: -1 }).limit(25);
     res.json({ notices: notices.map((n) => n.toObject({ getters: true })) });
   } catch (err) {
     console.error(err);

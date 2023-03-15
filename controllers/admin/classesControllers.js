@@ -24,10 +24,6 @@ const getClasses = async (req, res, next) => {
       {},
       "name totalStudents totalProjects assignedSupervisors"
     );
-
-    if (classes.length === 0) {
-      return next(new HttpError("No class exist", 404));
-    }
     res.json({ classes: classes.map((n) => n.toObject({ getters: true })) });
   } catch (err) {
     console.error(err);
