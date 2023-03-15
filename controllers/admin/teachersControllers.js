@@ -59,19 +59,20 @@ run();
 const getTeachers = async (req, res, next) => {
   let teachers;
   try {
-    teachers = await Teacher.find({});
+    teachers = await Teacher.find({}, "name empId designation image");
+    if (!teachers.length) {
+      return next(new HttpError("Couldn't find the teachers", 404));
+    }
+
+    res.json({
+      teachers: teachers.map((t) => t.toObject({ getters: true })),
+    });
   } catch (err) {
     console.error(err);
     return next(
       new HttpError("Something went wrong, couldn't find teachers", 500)
     );
   }
-
-  if (!teachers) {
-    return next(new HttpError("Couldn't find the teachers", 404));
-  }
-
-  res.json({ teachers: teachers.map((t) => t.toObject({ getters: true })) });
 };
 
 // GET TEACHER BY ID
@@ -133,12 +134,8 @@ const getTeacherById = async (req, res, next) => {
 
     res.json({
       teacher: teacher.toObject({ getters: true }),
-      assignedForSupervision: assignedClassesforSupervisionArray.map((c) =>
-        c.toObject({ getters: true })
-      ),
-      assignedForExamination: assignedClassesforExaminationArray.map((c) =>
-        c.toObject({ getters: true })
-      ),
+      assignedForSupervision: assignedClassesforSupervisionArray,
+      assignedForExamination: assignedClassesforExaminationArray,
       notices: noticesForTeacher.map((n) => n.toObject({ getters: true })),
       projects: projects.map((p) => p.toObject({ getters: true })),
     });

@@ -201,13 +201,11 @@ const getClassById = async (req, res, next) => {
 
     res.json({
       myClass: myClass.toObject({ getters: true }),
-      projects: projects.map((p) => p.myClass.toObject({ getters: true })),
-      supervisors: supervisors.map((s) =>
-        s.myClass.toObject({ getters: true })
-      ),
-      examiners: examiners.map((e) => e.myClass.toObject({ getters: true })),
-      students: students.map((s) => s.myClass.toObject({ getters: true })),
-      notices: notices.map((n) => n.myClass.toObject({ getters: true })),
+      projects: projects.map((p) => p.toObject({ getters: true })),
+      supervisors: supervisors.map((s) => s.toObject({ getters: true })),
+      examiners: examiners.map((e) => e.toObject({ getters: true })),
+      students: students.map((s) => s.toObject({ getters: true })),
+      notices: notices.map((n) => nS.toObject({ getters: true })),
     });
   } catch (err) {
     console.error(err);
