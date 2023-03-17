@@ -50,7 +50,6 @@ const createClass = async (req, res, next) => {
     if (existingClass) {
       return next(new HttpError("Classname already exists.", 422));
     }
-
     // Find the source class
     const sourceClass = await sourceClassesCollection.findOne({
       name: classname,
@@ -73,7 +72,6 @@ const createClass = async (req, res, next) => {
       minAllowed,
       maxAllowed,
     });
-
     // Get students from the source database and add them to our database
     let classStudents = [];
     for await (const student of sourceStudentsCollection.find({
@@ -134,11 +132,27 @@ const createClass = async (req, res, next) => {
 const deleteClass = async (req, res, next) => {
   const { classId } = req.params;
   let myClass;
+  const sess = await mongoose.startSession();
+  sess.startTransaction();
   try {
-    const sess = await mongoose.startSession();
-    sess.startTransaction();
     myClass = await Class.findOneAndDelete({ _id: classId }, { session: sess });
+    await Teacher.updateMany(
+      { assignedClassesForSupervision: myClass._id },
+      { $pull: { assignedClassesForSupervision: myClass._id } },
+      { session: sess }
+    );
+    await Teacher.updateMany(
+      { assignedClassesForExamination: myClass._id },
+      { $pull: { assignedClassesForExamination: myClass._id } },
+      { session: sess }
+    );
+    await Project.deleteMany({ classId: myClass._id }, { session: sess });
+    await NoticeBoard.deleteMany(
+      { receiverEntity: "class", receiverId: myClass._id },
+      { session: sess }
+    );
     await Student.deleteMany({ classId: myClass._id }, { session: sess });
+    res.json({ message: "Deleted Successfully" });
     await sess.commitTransaction();
     sess.endSession();
   } catch (err) {
@@ -149,11 +163,7 @@ const deleteClass = async (req, res, next) => {
       new HttpError("Something went wrong, couldn't delete the class", 422)
     );
   }
-  res.json({ message: "Deleted Successfully" });
 };
-
-// IMPORTANT
-// WILL BE USED FOR PRINTING THE CLASS PAGE
 
 const getClassById = async (req, res, next) => {
   const { classId } = req.params;

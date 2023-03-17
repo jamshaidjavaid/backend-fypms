@@ -180,6 +180,19 @@ const unAssignSupervisorToClass = async (req, res, next) => {
       );
     }
 
+    // check wether project with this supervisor with classId exists or not
+    const projects = Project.find({
+      classId: classId,
+      supervisorId: teacherId,
+    });
+    if ((await projects).length === 0) {
+      return next(
+        new HttpError(
+          "Please first change the supervisor of projects that are of this class which are assigned to this teacher",
+          400
+        )
+      );
+    }
     // then pull the classId from the assignedClassesForSupervision array of Teacher we get
     foundTeacher.assignedClassesForSupervision =
       foundTeacher.assignedClassesForSupervision.pull(classId);
