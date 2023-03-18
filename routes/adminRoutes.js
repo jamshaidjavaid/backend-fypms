@@ -2,6 +2,10 @@ const express = require("express");
 const { body } = require("express-validator");
 
 const { getDashboard } = require("../controllers/admin/dashboardController");
+const {
+  getProjectFormData,
+  loadAddSupervisorData,
+} = require("../controllers/admin/formControllers");
 // CLASSES
 const {
   getClasses,
@@ -114,16 +118,8 @@ router.patch(
   ],
   editTimeTable
 );
-router.patch(
-  "/classes/:classId/assign-supervisor",
-  [body("teacherId").notEmpty().withMessage("choose supervisor Id")],
-  assignSupervisorToClass
-);
-router.patch(
-  "/classes/:classId/assign-examiner",
-  [body("teacherId").notEmpty().withMessage("choose examiner Id")],
-  assignExaminerToClass
-);
+router.patch("/classes/:classId/assign-supervisor", assignSupervisorToClass);
+router.patch("/classes/:classId/assign-examiner", assignExaminerToClass);
 
 // PROJECTS ROUTES
 router.get("/projects", getAllProjects);
@@ -161,5 +157,9 @@ router.patch(
 router.get("/personal-notes", getNotes);
 router.post("/personal-notes/new-note", createNote);
 router.delete("/personal-notes/:noteId/delete", deleteNote);
+
+// FORM ROUTES
+router.get("/forms/new-project/data", getProjectFormData);
+router.get("/forms/add-supervisor/data", loadAddSupervisorData);
 
 module.exports = router;

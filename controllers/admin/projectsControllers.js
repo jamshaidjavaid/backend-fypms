@@ -24,6 +24,7 @@ const createProject = async (req, res, next) => {
     supervisorId,
     classId,
     className,
+    description,
   } = req.body;
 
   try {
@@ -77,6 +78,7 @@ const createProject = async (req, res, next) => {
       supervisorId,
       classId,
       className,
+      description,
     });
 
     await project.save({ session: sess });
@@ -84,6 +86,13 @@ const createProject = async (req, res, next) => {
     supervisor.assignedProjectsCount += 1;
     supervisor.assignedProjects.push(project._id);
     await supervisor.save({ session: sess });
+
+    for (const student of allStudents) {
+      await student.updateOne(
+        { assignedProjectId: project._id },
+        { session: sess }
+      );
+    }
 
     myClass.totalProjects += 1;
     await myClass.save({ session: sess });
@@ -219,10 +228,15 @@ const deleteProject = async (req, res, next) => {
 
     const supervisor = await Teacher.findById(project.supervisorId);
     const myClass = await Class.findById(project.classId);
+    const students = await Student.find({ assignedProjectId: project._id });
 
     supervisor.assignedProjectsCount -= 1;
     supervisor.assignedProjects = supervisor.assignedProjects.pull(project._id);
     await supervisor.save({ session: sess });
+
+    for (const student of students) {
+      await student.updateOne({ assignedProjectId: null }, { session: sess });
+    }
 
     myClass.totalProjects -= 1;
     await myClass.save({ session: sess });

@@ -269,13 +269,8 @@ const editTimeTable = async (req, res, next) => {
 // ASSIGNING A TEACHER TO CLASS AS SUPERVISOR
 
 const assignSupervisorToClass = async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
   const { classId } = req.params;
-  const { teacherId } = req.body;
+  const { supervisors } = req.body;
 
   const sess = await mongoose.startSession();
   sess.startTransaction();
@@ -286,29 +281,22 @@ const assignSupervisorToClass = async (req, res, next) => {
     if (!foundClass) {
       return next(new HttpError("Class not found", 404));
     }
+    for (const supervisor of supervisors) {
+      // Check if teacher exists or not. check with teacherId, with findById method.
+      const foundTeacher = await Teacher.findById(supervisor.id);
+      if (!foundTeacher) {
+        return next(new HttpError("Teacher not found", 404));
+      }
 
-    // Check if teacher exists or not. check with teacherId, with findById method.
-    const foundTeacher = await Teacher.findById(teacherId);
-    if (!foundTeacher) {
-      return next(new HttpError("Teacher not found", 404));
+      // then check in the assignedClassesForSupervision of Teacher that wether classId is already in the array or not.
+      if (foundTeacher.assignedClassesForSupervision.includes(classId)) {
+        continue; // skip to the next iteration
+      }
+      foundTeacher.assignedClassesForSupervision.push(classId);
+      await foundTeacher.save({ session: sess });
+      foundClass.assignedSupervisors += 1;
+      await foundClass.save({ session: sess });
     }
-
-    // then check in the assignedClassesForSupervision of Teacher that wether classId is already in the array or not.
-    if (foundTeacher.assignedClassesForSupervision.includes(classId)) {
-      return next(
-        new HttpError(
-          "Class already assigned to the teacher for supervision",
-          400
-        )
-      );
-    }
-
-    // then push the classId into the assignedClassesForSupervision array of Teacher we get
-    foundTeacher.assignedClassesForSupervision.push(classId);
-    await foundTeacher.save({ session: sess });
-    foundClass.assignedSupervisors += 1;
-    await foundClass.save({ session: sess });
-
     await sess.commitTransaction();
     sess.endSession();
     res.json({ message: "Class assigned to a supervisor" });
