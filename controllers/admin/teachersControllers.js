@@ -181,16 +181,13 @@ const unAssignSupervisorToClass = async (req, res, next) => {
     }
 
     // check wether project with this supervisor with classId exists or not
-    const projects = Project.find({
+    const projects = await Project.find({
       classId: classId,
       supervisorId: teacherId,
     });
-    if ((await projects).length === 0) {
+    if (projects.length > 0) {
       return next(
-        new HttpError(
-          "Please first change the supervisor of projects that are of this class which are assigned to this teacher",
-          400
-        )
+        new HttpError("Supervisor is assigned to projects of the class", 400)
       );
     }
     // then pull the classId from the assignedClassesForSupervision array of Teacher we get
@@ -202,7 +199,7 @@ const unAssignSupervisorToClass = async (req, res, next) => {
 
     await sess.commitTransaction();
     sess.endSession();
-    res.json({ message: "Class assigned to a supervisor" });
+    res.json({ message: "Class un-assigned to a supervisor" });
   } catch (err) {
     await sess.abortTransaction();
     sess.endSession();
@@ -253,7 +250,7 @@ const unAssignExaminerToClass = async (req, res, next) => {
 
     await sess.commitTransaction();
     sess.endSession();
-    res.json({ message: "Class assigned to a supervisor" });
+    res.json({ message: "Class un-assigned to an examiner" });
   } catch (err) {
     await sess.abortTransaction();
     sess.endSession();

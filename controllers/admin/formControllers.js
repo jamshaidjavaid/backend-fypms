@@ -37,14 +37,17 @@ const loadAddSupervisorData = async (req, res, next) => {
   const { classId } = req.query;
   let supervisors, teachers;
   try {
-    teachers = await Teacher.find({}, "name");
-    supervisors = await Teacher.find(
-      { assignedClassesForSupervision: classId },
+    teachers = await Teacher.find(
+      { assignedClassesForSupervision: { $ne: classId } },
       "name"
     );
+    // supervisors = await Teacher.find(
+    //   { assignedClassesForSupervision: classId },
+    //   "name"
+    // );
     res.json({
       teachers: teachers.map((s) => s.toObject({ getters: true })),
-      supervisors: supervisors.map((s) => s.toObject({ getters: true })),
+      // supervisors: supervisors.map((s) => s.toObject({ getters: true })),
     });
   } catch (err) {
     console.error(err);
@@ -52,4 +55,48 @@ const loadAddSupervisorData = async (req, res, next) => {
   }
 };
 
-module.exports = { getProjectFormData, loadAddSupervisorData };
+const loadAddExaminerData = async (req, res, next) => {
+  const { classId } = req.query;
+  let examiners, teachers;
+  try {
+    teachers = await Teacher.find(
+      { assignedClassesForExamination: { $ne: classId } },
+      "name"
+    );
+    // supervisors = await Teacher.find(
+    //   { assignedClassesForSupervision: classId },
+    //   "name"
+    // );
+    res.json({
+      teachers: teachers.map((s) => s.toObject({ getters: true })),
+      // supervisors: supervisors.map((s) => s.toObject({ getters: true })),
+    });
+  } catch (err) {
+    console.error(err);
+    return next(new HttpError("Sorry, couldn't load your data", 500));
+  }
+};
+
+const loadNewNoticeFormData = async (req, res, next) => {
+  const { receiverEntity } = req.query;
+  let data;
+  try {
+    if (receiverEntity === "class") {
+      data = await Class.find({}, "name");
+    } else if (receiverEntity === "teacher") {
+      data = await Teacher.find({}, "name");
+    }
+
+    res.json({ data: data.map((s) => s.toObject({ getters: true })) });
+  } catch (err) {
+    console.error(err);
+    return next(new HttpError("Sorry, couldn't load your data", 500));
+  }
+};
+
+module.exports = {
+  getProjectFormData,
+  loadAddSupervisorData,
+  loadNewNoticeFormData,
+  loadAddExaminerData,
+};

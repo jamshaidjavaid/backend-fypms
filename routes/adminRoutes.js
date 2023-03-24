@@ -5,6 +5,8 @@ const { getDashboard } = require("../controllers/admin/dashboardController");
 const {
   getProjectFormData,
   loadAddSupervisorData,
+  loadNewNoticeFormData,
+  loadAddExaminerData,
 } = require("../controllers/admin/formControllers");
 // CLASSES
 const {
@@ -161,5 +163,7 @@ router.delete("/personal-notes/:noteId/delete", deleteNote);
 // FORM ROUTES
 router.get("/forms/new-project/data", getProjectFormData);
 router.get("/forms/add-supervisor/data", loadAddSupervisorData);
+router.get("/forms/add-examiner/data", loadAddExaminerData);
+router.get("/forms/new-notice/data", loadNewNoticeFormData);
 
 module.exports = router;

@@ -146,6 +146,22 @@ const deleteClass = async (req, res, next) => {
       { $pull: { assignedClassesForExamination: myClass._id } },
       { session: sess }
     );
+
+    const projectsToDelete = await Project.find({
+      classId: myClass._id,
+    });
+    for (const project of projectsToDelete) {
+      const supervisorId = project.supervisorId;
+      await Teacher.updateOne(
+        { _id: supervisorId },
+        {
+          $inc: { assignedProjectsCount: -1 },
+          $pull: { assignedProjects: project._id },
+        },
+        { session: sess }
+      );
+    }
+
     await Project.deleteMany({ classId: myClass._id }, { session: sess });
     await NoticeBoard.deleteMany(
       { receiverEntity: "class", receiverId: myClass._id },
@@ -211,7 +227,7 @@ const getClassById = async (req, res, next) => {
       supervisors: supervisors.map((s) => s.toObject({ getters: true })),
       examiners: examiners.map((e) => e.toObject({ getters: true })),
       students: students.map((s) => s.toObject({ getters: true })),
-      notices: notices.map((n) => nS.toObject({ getters: true })),
+      notices: notices.map((n) => n.toObject({ getters: true })),
     });
   } catch (err) {
     console.error(err);
@@ -240,6 +256,8 @@ const editTimeTable = async (req, res, next) => {
   } = req.body;
 
   let updatedClass;
+
+  console.log(req.body);
 
   try {
     updatedClass = await Class.findByIdAndUpdate(
@@ -299,7 +317,16 @@ const assignSupervisorToClass = async (req, res, next) => {
     }
     await sess.commitTransaction();
     sess.endSession();
-    res.json({ message: "Class assigned to a supervisor" });
+
+    const updatedSupervisors = await Teacher.find({
+      assignedClassesForSupervision: classId,
+    });
+    res.json({
+      updatedSupervisors: updatedSupervisors.map((s) =>
+        s.toObject({ getters: true })
+      ),
+      message: "Class assigned to a supervisor",
+    });
   } catch (err) {
     await sess.abortTransaction();
     sess.endSession();
@@ -311,13 +338,8 @@ const assignSupervisorToClass = async (req, res, next) => {
 // ASSIGNING EXAMINER TO CLASS
 
 const assignExaminerToClass = async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
   const { classId } = req.params;
-  const { teacherId } = req.body;
+  const { examiners } = req.body;
 
   const sess = await mongoose.startSession();
   sess.startTransaction();
@@ -328,32 +350,41 @@ const assignExaminerToClass = async (req, res, next) => {
     if (!foundClass) {
       return next(new HttpError("Class not found", 404));
     }
+    for (const examiner of examiners) {
+      // Check if teacher exists or not. check with teacherId, with findById method.
+      const foundTeacher = await Teacher.findById(examiner.id);
+      if (!foundTeacher) {
+        return next(new HttpError("Teacher not found", 404));
+      }
 
-    // Check if teacher exists or not. check with teacherId, with findById method.
-    const foundTeacher = await Teacher.findById(teacherId);
-    if (!foundTeacher) {
-      return next(new HttpError("Teacher not found", 404));
+      // then check in the assignedClassesForExamination of Teacher that wether classId is already in the array or not.
+      if (foundTeacher.assignedClassesForExamination.includes(classId)) {
+        return next(
+          new HttpError(
+            "Class already assigned to the teacher for examination",
+            400
+          )
+        );
+      }
+
+      // then push the classId into the assignedClassesForExamination array of Teacher we get
+      foundTeacher.assignedClassesForExamination.push(classId);
+      await foundTeacher.save({ session: sess });
+      foundClass.assignedExaminers += 1;
+      await foundClass.save({ session: sess });
     }
-
-    // then check in the assignedClassesForExamination of Teacher that wether classId is already in the array or not.
-    if (foundTeacher.assignedClassesForExamination.includes(classId)) {
-      return next(
-        new HttpError(
-          "Class already assigned to the teacher for examination",
-          400
-        )
-      );
-    }
-
-    // then push the classId into the assignedClassesForExamination array of Teacher we get
-    foundTeacher.assignedClassesForExamination.push(classId);
-    await foundTeacher.save({ session: sess });
-    foundClass.assignedExaminers += 1;
-    await foundClass.save({ session: sess });
-
     await sess.commitTransaction();
     sess.endSession();
-    res.json({ message: "Class assigned to a examiner" });
+
+    const updatedExaminers = await Teacher.find({
+      assignedClassesForExamination: classId,
+    });
+    res.json({
+      updatedExaminers: updatedExaminers.map((e) =>
+        e.toObject({ getters: true })
+      ),
+      message: "Class assigned to an examiner",
+    });
   } catch (err) {
     await sess.abortTransaction();
     sess.endSession();
