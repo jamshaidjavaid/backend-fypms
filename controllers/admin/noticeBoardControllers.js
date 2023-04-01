@@ -57,7 +57,6 @@ const createNotice = async (req, res, next) => {
   });
 
   try {
-    console.log(createdNotice);
     await createdNotice.save({ session });
     await session.commitTransaction();
     session.endSession();

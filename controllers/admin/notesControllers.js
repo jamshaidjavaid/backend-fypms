@@ -6,16 +6,16 @@ const Student = require("../../models/studentModel");
 const Note = require("../../models/noteModel");
 
 const getNotes = async (req, res, next) => {
-  const { role, id, userID } = req.query;
+  const { role, userId } = req.query;
   let notes;
   try {
     if (role === "Admin") {
       notes = await Note.find().sort({ createdAt: -1 });
     } else if (role === "Student") {
-      const student = await Student.findById(id);
+      const student = await Student.findById(userId);
       notes = student.notes;
     } else if (role === "Teacher") {
-      const teacher = await Teacher.findById(id);
+      const teacher = await Teacher.findById(userId);
       notes = teacher.notes;
     }
     res.json({ notes: notes.map((n) => n.toObject({ getters: true })) });
@@ -29,14 +29,14 @@ const getNotes = async (req, res, next) => {
 
 // CREATING A NOte
 const createNote = async (req, res, next) => {
-  const { note, id, role } = req.body;
+  const { note, userId, role } = req.body;
 
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     if (role === "Student") {
-      const student = await Student.findById(id);
+      const student = await Student.findById(userId);
       if (!student) {
         return next(new HttpError("This student doesn't exist", 404));
       }
@@ -46,7 +46,7 @@ const createNote = async (req, res, next) => {
       student.notes.push(createdNote);
       await student.save({ session });
     } else if (role === "Teacher") {
-      const teacher = await Teacher.findById(id);
+      const teacher = await Teacher.findById(userId);
       if (!teacher) {
         return next(new HttpError("This teacher doesn't exist", 404));
       }
@@ -79,29 +79,21 @@ const createNote = async (req, res, next) => {
 
 //  delete A NOte
 const deleteNote = async (req, res, next) => {
-  const { id, role } = req.query;
+  const { userId, role } = req.query;
   const { noteId } = req.params;
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     if (role === "Student") {
-      const student = await Student.findById(id);
-      if (!student) {
-        return next(new HttpError("This student doesn't exist", 404));
-      }
       await Student.updateOne(
-        { _id: id },
+        { _id: userId },
         { $pull: { notes: { _id: noteId } } },
         { session }
       );
     } else if (role === "Teacher") {
-      const teacher = await Teacher.findById(id);
-      if (!teacher) {
-        return next(new HttpError("This teacher doesn't exist", 404));
-      }
       await Teacher.updateOne(
-        { _id: id },
+        { _id: userId },
         { $pull: { notes: { _id: noteId } } },
         { session }
       );

@@ -1,5 +1,22 @@
 const mongoose = require("mongoose");
 
+const taskSchema = new mongoose.Schema({
+  startDate: { type: Date, required: true },
+  endDate: { type: Date },
+  deadline: { type: Date, required: true },
+  assignedToName: { type: String, required: true, maxlength: 255 },
+  assignedToId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  title: { type: String, required: true, maxlength: 255 },
+  phase: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    default: "In Progress",
+  },
+});
+
 const projectSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -59,11 +76,30 @@ const projectSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  tasks: [taskSchema],
 });
 
 projectSchema.path("memberNames").set(function (memberNames) {
   this.members = memberNames.length;
   return memberNames;
+});
+
+taskSchema.pre("save", function (next) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (this.endDate) {
+    this.status = "Completed";
+  } else if (new Date(this.deadline) < today) {
+    this.status = "Late";
+  } else if (new Date(this.startDate) > today) {
+    this.status = "Not Started";
+  } else if (
+    new Date(this.startDate) <= today &&
+    today < new Date(this.deadline)
+  ) {
+    this.status = "In Progress";
+  }
+  next();
 });
 
 module.exports = mongoose.model("Project", projectSchema);
