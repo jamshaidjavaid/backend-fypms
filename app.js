@@ -14,6 +14,8 @@ connectDB();
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const studentRoutes = require("./routes/studentRoutes");
+const teacherRoutes = require("./routes/teacherRoutes");
+
 const HttpError = require("./models/HttpError");
 
 const app = express();
@@ -24,6 +26,7 @@ app.use(cors(corsOptions));
 app.use("/api", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/student", studentRoutes);
+app.use("/api/teacher", teacherRoutes);
 
 app.use((req, res, next) => {
   const error = new HttpError("Could not find this route.", 404);
