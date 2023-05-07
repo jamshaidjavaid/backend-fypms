@@ -24,8 +24,6 @@ app.use(express.json());
 
 app.use(cors(corsOptions));
 
-const PORT = process.env.PORT || 8000;
-
 app.use("/api", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/student", studentRoutes);
@@ -42,8 +40,4 @@ app.use((error, req, res, next) => {
   }
   res.status(error.code || 500);
   res.json({ message: error.message || "An unknown error occurred!" });
-});
-
-app.listen(PORT, () => {
-  console.log(`server started on port ${PORT}`);
 });
