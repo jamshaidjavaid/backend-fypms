@@ -12,6 +12,8 @@ const corsOptions = {
 const connectDB = require("./config/db");
 connectDB();
 
+const PORT = process.env.PORT || 8000;
+
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const studentRoutes = require("./routes/studentRoutes");
@@ -29,6 +31,10 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/teacher", teacherRoutes);
 
+app.use("/", (req, res) => {
+  res.send("server working");
+});
+
 app.use((req, res, next) => {
   const error = new HttpError("Could not find this route.", 404);
   throw error;
@@ -40,4 +46,8 @@ app.use((error, req, res, next) => {
   }
   res.status(error.code || 500);
   res.json({ message: error.message || "An unknown error occurred!" });
+});
+
+app.listen(PORT, () => {
+  console.log(`server started on port ${PORT}`);
 });
