@@ -26,7 +26,7 @@ app.use(express.json());
 
 app.use(cors(corsOptions));
 
-app.use("/api", authRoutes);
+app.use("/api/", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/teacher", teacherRoutes);

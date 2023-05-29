@@ -1,3 +1,4 @@
+const bcrypt = require("bcrypt");
 const { validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 
@@ -28,7 +29,11 @@ const updateTeachers = async () => {
         resume_token = change._id;
         if (change.operationType === "insert") {
           const { _id, name, empId, image, designation } = change.fullDocument;
+          const salt = await bcrypt.genSalt(10);
+          const hashedPassword = await bcrypt.hash(empId, salt);
           const createdTeacher = new Teacher({
+            salt,
+            password: hashedPassword,
             _id,
             name,
             empId,
@@ -61,7 +66,7 @@ const getTeachers = async (req, res, next) => {
   try {
     teachers = await Teacher.find({}, "name empId designation image");
     if (!teachers.length) {
-      return next(new HttpError("Couldn't find the teachers", 404));
+      return next(new HttpError("No teachers in database", 200));
     }
 
     res.json({

@@ -1,4 +1,5 @@
 const express = require("express");
+const verifyToken = require("../middlewares/verifyToken");
 const { body } = require("express-validator");
 
 const { getDashboard } = require("../controllers/admin/dashboardController");
@@ -63,9 +64,10 @@ const router = express.Router();
 router.get("/", getDashboard);
 
 // Notice Board Routes
-router.get("/notice-board", getNoticeBoard);
+router.get("/notice-board", verifyToken, getNoticeBoard);
 router.post(
   "/notice-board/new-notice",
+  verifyToken,
   [
     body("headline").notEmpty().withMessage("Write Headline"),
     body("description").notEmpty().withMessage("Write description"),
@@ -79,17 +81,22 @@ router.post(
   ],
   createNotice
 );
-router.delete("/notice-board/:noticeId/delete", deleteNotice);
+router.delete("/notice-board/:noticeId/delete", verifyToken, deleteNotice);
 
 // Notification Routes
-router.get("/notifications", getNotifications);
-router.post("/notifications/new-notification", createNotification);
-router.delete("/notifications/:notificationId/delete", deleteNotification);
+router.get("/notifications", verifyToken, getNotifications);
+router.post("/notifications/new-notification", verifyToken, createNotification);
+router.delete(
+  "/notifications/:notificationId/delete",
+  verifyToken,
+  deleteNotification
+);
 
 // Classes Routes
-router.get("/classes", getClasses);
+router.get("/classes", verifyToken, getClasses);
 router.post(
   "/classes/new-class",
+  verifyToken,
   [
     body("program").notEmpty().withMessage("Write program"),
     body("session").notEmpty().withMessage("choose session"),
@@ -99,10 +106,11 @@ router.post(
   ],
   createClass
 );
-router.delete("/classes/:classId/delete", deleteClass);
-router.get("/classes/:classId", getClassById);
+router.delete("/classes/:classId/delete", verifyToken, deleteClass);
+router.get("/classes/:classId", verifyToken, getClassById);
 router.patch(
   "/classes/:classId/edit-timetable",
+  verifyToken,
   [
     body("titleSubmission").notEmpty().isDate().withMessage("choose date"),
     body("proposalSubmission").notEmpty().isDate().withMessage("choose date"),
@@ -120,13 +128,22 @@ router.patch(
   ],
   editTimeTable
 );
-router.patch("/classes/:classId/assign-supervisor", assignSupervisorToClass);
-router.patch("/classes/:classId/assign-examiner", assignExaminerToClass);
+router.patch(
+  "/classes/:classId/assign-supervisor",
+  verifyToken,
+  assignSupervisorToClass
+);
+router.patch(
+  "/classes/:classId/assign-examiner",
+  verifyToken,
+  assignExaminerToClass
+);
 
 // PROJECTS ROUTES
-router.get("/projects", getAllProjects);
+router.get("/projects", verifyToken, getAllProjects);
 router.post(
   "/projects/new-project",
+  verifyToken,
   [
     body("title").notEmpty().withMessage("Write title"),
     body("memberNames").notEmpty().isArray().withMessage("choose memberNames"),
@@ -137,33 +154,35 @@ router.post(
   ],
   createProject
 );
-router.get("/projects/:projectId", getProjectById);
-router.delete("/projects/:projectId/delete", deleteProject);
-router.patch("/projects/:projectId/edit", updateProject);
+router.get("/projects/:projectId", verifyToken, getProjectById);
+router.delete("/projects/:projectId/delete", verifyToken, deleteProject);
+router.patch("/projects/:projectId/edit", verifyToken, updateProject);
 
 // TEACHERS ROUTES
-router.get("/teachers", getTeachers);
-router.get("/teachers/:teacherId", getTeacherById);
+router.get("/teachers", verifyToken, getTeachers);
+router.get("/teachers/:teacherId", verifyToken, getTeacherById);
 router.patch(
   "/teachers/:teacherId/unassign-supervisor",
+  verifyToken,
   [body("classId").notEmpty().withMessage("choose class Id")],
   unAssignSupervisorToClass
 );
 router.patch(
   "/teachers/:teacherId/unassign-examiner",
+  verifyToken,
   [body("classId").notEmpty().withMessage("choose class Id")],
   unAssignExaminerToClass
 );
 
 // NOTES ROUTES
-router.get("/personal-notes", getNotes);
-router.post("/personal-notes/new-note", createNote);
-router.delete("/personal-notes/:noteId/delete", deleteNote);
+router.get("/personal-notes", verifyToken, getNotes);
+router.post("/personal-notes/new-note", verifyToken, createNote);
+router.delete("/personal-notes/:noteId/delete", verifyToken, deleteNote);
 
 // FORM ROUTES
-router.get("/forms/new-project/data", getProjectFormData);
-router.get("/forms/add-supervisor/data", loadAddSupervisorData);
-router.get("/forms/add-examiner/data", loadAddExaminerData);
-router.get("/forms/new-notice/data", loadNewNoticeFormData);
+router.get("/forms/new-project/data", verifyToken, getProjectFormData);
+router.get("/forms/add-supervisor/data", verifyToken, loadAddSupervisorData);
+router.get("/forms/add-examiner/data", verifyToken, loadAddExaminerData);
+router.get("/forms/new-notice/data", verifyToken, loadNewNoticeFormData);
 
 module.exports = router;

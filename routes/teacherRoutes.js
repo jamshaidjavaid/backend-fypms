@@ -4,6 +4,8 @@ const { body } = require("express-validator");
 const {
   getDashboard,
   updateLimit,
+  getSupervisionProjects,
+  getExaminationProjects,
 } = require("../controllers/teacher/dashboardControllers");
 
 // const {
@@ -28,6 +30,9 @@ const router = express.Router();
 // DASHBOARD ROUTE
 router.get("/dashboard", getDashboard);
 router.patch("/dashboard/projects-limit", updateLimit);
+
+router.get("/supervision-projects", getSupervisionProjects);
+router.get("/examination-projects", getExaminationProjects);
 
 // MY PROJECT ROUTES
 // router.get("/projects", getProjectPage);

@@ -1,6 +1,14 @@
 const mongoose = require("mongoose");
 
 const teacherSchema = new mongoose.Schema({
+  password: {
+    type: String,
+    required: true,
+  },
+  salt: {
+    type: String,
+    required: true,
+  },
   _id: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -18,7 +26,6 @@ const teacherSchema = new mongoose.Schema({
   designation: {
     type: String,
     maxlength: 255,
-    enum: ["Lecturer", "Professor", "Ass. Professor"],
   },
   image: {
     type: String,

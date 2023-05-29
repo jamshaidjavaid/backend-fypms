@@ -50,7 +50,7 @@ const createNotification = async (req, res, next) => {
     await createdNotification.save({ session });
     await session.commitTransaction();
     session.endSession();
-    res.status(201).json({
+    res.status(200).json({
       notification: createdNotification.toObject({ getters: true }),
       message: "Saved Successfully",
     });

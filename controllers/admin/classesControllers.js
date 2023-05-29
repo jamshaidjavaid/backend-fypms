@@ -1,3 +1,4 @@
+const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const sourceDB = mongoose.createConnection(
   "mongodb+srv://jamshaidjavaid:rollcasting@cluster0.hfeosn9.mongodb.net/externaledatabase?retryWrites=true&w=majority"
@@ -77,7 +78,11 @@ const createClass = async (req, res, next) => {
     for await (const student of sourceStudentsCollection.find({
       className: classname,
     })) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(student.rollNo, salt);
       const newStudent = new Student({
+        salt,
+        password: hashedPassword,
         name: student.name,
         rollNo: student.rollNo,
         classId: createdClass._id,
@@ -116,7 +121,7 @@ const createClass = async (req, res, next) => {
     }
     await sess.commitTransaction();
     sess.endSession();
-    res.status(201).json({
+    res.status(200).json({
       createdClass,
       message: "Class and Students Saved Successfully",
     });

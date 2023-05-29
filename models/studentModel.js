@@ -1,6 +1,14 @@
 const mongoose = require("mongoose");
 
 const studentSchema = new mongoose.Schema({
+  password: {
+    type: String,
+    required: true,
+  },
+  salt: {
+    type: String,
+    required: true,
+  },
   name: {
     type: String,
     required: true,

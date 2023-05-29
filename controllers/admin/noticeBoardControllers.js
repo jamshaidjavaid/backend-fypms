@@ -68,7 +68,7 @@ const createNotice = async (req, res, next) => {
       new HttpError("Invalid inputs passed, please check your data.", 422)
     );
   }
-  res.status(201).json({
+  res.status(200).json({
     notice: createdNotice.toObject({ getters: true }),
     message: "Saved Successfully",
   });

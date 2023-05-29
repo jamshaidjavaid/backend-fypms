@@ -2,6 +2,7 @@ const HttpError = require("../../models/HttpError");
 const NoticeBoard = require("../../models/noticeBoardModel");
 const Notification = require("../../models/notificationModel");
 const Teacher = require("../../models/teacherModel");
+const Project = require("../../models/projectModel");
 const Class = require("../../models/classModel");
 
 const getDashboard = async (req, res, next) => {
@@ -85,7 +86,86 @@ const updateLimit = async (req, res, next) => {
   }
 };
 
+const getSupervisionProjects = async (req, res, next) => {
+  const { userId } = req.query;
+
+  try {
+    const teacher = await Teacher.findById(userId);
+
+    if (!teacher) {
+      return next(new HttpError("Couldn't find teacher", 400));
+    }
+
+    const classes = teacher.assignedClassesForSupervision;
+    const allClasses = [];
+    const allProjects = [];
+    for (const myClass of classes) {
+      const currentClass = await Class.findById(myClass);
+      allClasses.push({
+        id: currentClass._id,
+        name: currentClass.name,
+      });
+      const projects = await Project.find({
+        supervisorId: userId,
+        classId: currentClass._id,
+      });
+      allProjects.push({
+        className: currentClass.name,
+        classProjects: projects,
+      });
+    }
+
+    res.send({
+      allClasses,
+      allProjects,
+    });
+  } catch (err) {
+    console.error(err);
+    return next(new HttpError("Couldn't retrieve projects data", 500));
+  }
+};
+
+const getExaminationProjects = async (req, res, next) => {
+  const { userId } = req.query;
+
+  try {
+    const teacher = await Teacher.findById(userId);
+
+    if (!teacher) {
+      return next(new HttpError("Couldn't find teacher", 400));
+    }
+
+    const classes = teacher.assignedClassesForExamination;
+    const allClasses = [];
+    const allProjects = [];
+    for (const myClass of classes) {
+      const currentClass = await Class.findById(myClass);
+      allClasses.push({
+        id: currentClass._id,
+        name: currentClass.name,
+      });
+      const projects = await Project.find({
+        classId: currentClass._id,
+      });
+      allProjects.push({
+        className: currentClass.name,
+        classProjects: projects,
+      });
+    }
+
+    res.send({
+      allClasses,
+      allProjects,
+    });
+  } catch (err) {
+    console.error(err);
+    return next(new HttpError("Couldn't retrieve projects data", 500));
+  }
+};
+
 module.exports = {
   getDashboard,
   updateLimit,
+  getSupervisionProjects,
+  getExaminationProjects,
 };

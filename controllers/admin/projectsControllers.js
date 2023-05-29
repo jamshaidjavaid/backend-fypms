@@ -99,7 +99,7 @@ const createProject = async (req, res, next) => {
 
     await sess.commitTransaction();
     sess.endSession();
-    res.status(201).json({
+    res.status(200).json({
       project: project.toObject({ getters: true }),
       message: "Your project has been registered succesfully.",
     });
