@@ -26,12 +26,15 @@ const getDashboard = async (req, res, next) => {
     classesSupervision = teacher.assignedClassesForSupervision.length;
     projectsSupervision = teacher.assignedProjectsCount;
     projectsSupervisionLimit = teacher.projectsLimit;
-
+    let projectsAll = 0;
     for (const aClass of teacher.assignedClassesForExamination) {
       const myClassProjects = await Class.findById(aClass, "totalProjects");
-      projectsExamination += myClassProjects;
+      if (myClassProjects.totalProjects) {
+        projectsAll += myClassProjects.totalProjects;
+      }
     }
 
+    console.log(projectsAll);
     notifications = await Notification.find({
       senderId: userId,
     });
@@ -47,7 +50,7 @@ const getDashboard = async (req, res, next) => {
       classesSupervision,
       projectsSupervision,
       projectsSupervisionLimit,
-      projectsExamination,
+      projectsExamination: projectsAll,
     });
   } catch (err) {
     console.error(err);
